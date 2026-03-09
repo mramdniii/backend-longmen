@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from fastapi.security import HTTPBearer
 
 from app.core.config import settings
 from app.core.exceptions import AppException
@@ -23,7 +24,35 @@ app = FastAPI(
     docs_url="/docs" if settings.APP_ENV != "production" else None,
     redoc_url="/redoc" if settings.APP_ENV != "production" else None,
     lifespan=lifespan,
+    swagger_ui_parameters={"persistAuthorization": True},
+    openapi_tags=[{"name": "Auth"}],
 )
+
+# ── Security scheme (enables Authorize button in Swagger) ─────
+from fastapi.openapi.utils import get_openapi
+
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        routes=app.routes,
+    )
+    schema["components"]["securitySchemes"] = {
+        "BearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+        }
+    }
+    for path in schema["paths"].values():
+        for method in path.values():
+            method.setdefault("security", [{"BearerAuth": []}])
+    app.openapi_schema = schema
+    return schema
+
+app.openapi = custom_openapi
 
 
 # ── Global exception handler ──────────────────────────────────

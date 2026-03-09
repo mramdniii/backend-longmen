@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 Auth Router
 
@@ -97,7 +99,7 @@ async def password_reset_request(
 ) -> MessageResponse:
     svc = AuthService(db)
     result = await svc.request_password_reset(payload, ip_address=_ip(request))
-    return MessageResponse(**result)
+    return MessageResponse(message=result["message"], detail=result.get("_dev_token"))
 
 
 @router.post(
