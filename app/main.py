@@ -73,3 +73,14 @@ app.include_router(auth_router, prefix="/api/v1")
 @app.get("/health", tags=["Health"])
 async def health() -> dict:
     return {"status": "ok", "env": settings.APP_ENV}
+
+
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # ganti dengan URL frontend kamu
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
