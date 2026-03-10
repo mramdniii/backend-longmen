@@ -140,4 +140,10 @@ async def login_history(
 ) -> list[LoginLogResponse]:
     svc = AuthService(db)
     logs = await svc.get_login_history(current_user.id, limit=limit)
-    return [LoginLogResponse.model_validate(log) for log in logs]
+    return [
+        LoginLogResponse.model_validate({
+            **{c.key: getattr(log, c.key) for c in log.__table__.columns},
+            "ip_address": str(log.ip_address) if log.ip_address else None,
+        })
+        for log in logs
+    ]
